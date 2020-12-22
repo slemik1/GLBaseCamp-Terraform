@@ -6,11 +6,11 @@ module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
   name   = "nginx-vpc"
-  cidr   = "10.0.0.0/16"
+  cidr   = "172.31.0.0/16"
 
   azs             = var.azs
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
+  private_subnets = ["172.31.1.0/24", "172.31.2.0/24"]
+  public_subnets  = ["172.31.101.0/24", "172.31.102.0/24"]
 
   enable_ipv6 = true
 
@@ -23,6 +23,51 @@ module "vpc" {
   }
 }
 
+module "elb_http" {
+  source  = "terraform-aws-modules/elb/aws"
+
+  name = "elb-example"
+
+  subnets         = ["module.vpc.private_subnets[0]", "module.vpc.private_subnets[1]"]
+  security_groups = [aws_security_group.Terraform_Nginx.id]
+  internal        = false
+
+  listener = [
+    {
+      instance_port     = "80"
+      instance_protocol = "HTTP"
+      lb_port           = "80"
+      lb_protocol       = "HTTP"
+    },
+    {
+      instance_port     = "80"
+      instance_protocol = "http"
+      lb_port           = "80"
+      lb_protocol       = "http"
+    },
+  ]
+
+  health_check = {
+    target              = "HTTP:80/"
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+  }
+
+  access_logs = {
+    bucket = "my-access-logs-bucket"
+  }
+
+  // ELB attachments
+  number_of_instances = 2
+  instances           = ["aws_instance.ubuntu_nginx_1.id", "aws_instance.ubuntu_nginx_2.id"]
+
+  tags = {
+    Owner       = "Alex Keilin"
+  }
+}
+
 resource "aws_instance" "ubuntu_nginx_1" {
     ami                    = "ami-0502e817a62226e03"
     instance_type          = "t2.micro"
@@ -31,7 +76,7 @@ resource "aws_instance" "ubuntu_nginx_1" {
     user_data = <<EOF
 #!/bin/bash
 sudo apt-get -y update
-sudo apt-fet -y install nginx
+sudo apt-get -y install nginx
 myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
 echo "<h2>WebServer with IP: $myip</h2><br>Build by Terraform!" > /var/www/html/index.html
 sudo service nginx start
@@ -53,7 +98,7 @@ resource "aws_instance" "ubuntu_nginx_2" {
     user_data = <<EOF
 #!/bin/bash
 sudo apt-get -y update
-sudo apt-fet -y install nginx
+sudo apt-get -y install nginx
 myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
 echo "<h2>WebServer with IP: $myip</h2><br>Build by Terraform!" > /var/www/html/index.html
 sudo service nginx start
