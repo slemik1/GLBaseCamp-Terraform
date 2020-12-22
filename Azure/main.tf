@@ -45,7 +45,7 @@ resource "azurerm_lb_backend_address_pool" "azure_nginx_backend_address_pool" {
  name                = "BackEndAddressPool"
 }
 
-resource "azurerm_lb_nat_pool" "example" {
+resource "azurerm_lb_nat_pool" "azure_nginx_nat" {
   resource_group_name            = azurerm_resource_group.azure_nginx_group.name
   loadbalancer_id                = azurerm_lb.azure_nginx_lb.id
   name                           = "SampleApplicationPool"
