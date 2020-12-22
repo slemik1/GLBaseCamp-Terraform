@@ -30,8 +30,8 @@ resource "aws_instance" "ubuntu_nginx_1" {
     vpc_security_group_ids = [aws_security_group.Terraform_Nginx.id]
     user_data = <<EOF
 #!/bin/bash
-sudo apt-get update -y
-sudo apt-fet install nginx -y
+sudo apt-get -y update
+sudo apt-fet -y install nginx
 myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
 echo "<h2>WebServer with IP: $myip</h2><br>Build by Terraform!" > /var/www/html/index.html
 sudo service nginx start
@@ -52,8 +52,8 @@ resource "aws_instance" "ubuntu_nginx_2" {
     vpc_security_group_ids = [aws_security_group.Terraform_Nginx.id]
     user_data = <<EOF
 #!/bin/bash
-sudo apt-get update -y
-sudo apt-fet install nginx -y
+sudo apt-get -y update
+sudo apt-fet -y install nginx
 myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
 echo "<h2>WebServer with IP: $myip</h2><br>Build by Terraform!" > /var/www/html/index.html
 sudo service nginx start
